@@ -1,0 +1,8 @@
+#include "motion/algorithm.hpp"
+#include "motion/common.hpp"
+#include "motion/ensemble.hpp"
+#include "motion/leap.hpp"
+#include "motion/melody.hpp"
+#include "motion/movement.hpp"
+#include "motion/orchestra.hpp"
+#include "motion/symphony.hpp"
