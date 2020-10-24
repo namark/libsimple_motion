@@ -3,23 +3,22 @@
 #include "simple/motion/movement.hpp"
 #include "simple/motion/symphony.hpp"
 
-using namespace simple::motion;
-using duration = std::chrono::duration<float>;
 using namespace std::literals;
+using duration = std::chrono::duration<float>;
 using simple::support::way;
+using simple::motion::symphony;
 
 // TODO: use rational, can't rely on float
+using movement = simple::motion::movement<duration,float,float>;
 
 void SharpTurn()
 {
 	using float2 = std::array<float,2>;
 	float2 block{0,0};
 
-	using move = movement<duration, float>;
-
-	auto sharp_turn = symphony(std::vector<move>{
-		move{0,1, 1250ms},
-		move{0,1, 1250ms}
+	auto sharp_turn = symphony(std::vector<movement>{
+		movement{1250ms, 0,1},
+		movement{1250ms, 0,1}
 	});
 
 

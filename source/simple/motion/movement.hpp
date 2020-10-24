@@ -16,13 +16,13 @@ Number cubic_curve(Number x) { return x*x*x; };
 template <typename Number>
 using curve_t = decltype(&linear_curve<Number>);
 
-template <typename Duration, typename Type, typename Ratio = float, curve_t<Ratio> curve = linear_curve<Ratio>>
+template <typename Duration, typename Type, typename Ratio, curve_t<Ratio> curve = linear_curve<Ratio>>
 struct movement
 {
 	using duration = Duration;
+	Duration total {};
 	Type start;
 	Type end;
-	Duration total {};
 	Duration elapsed {};
 
 	decltype(auto) value()

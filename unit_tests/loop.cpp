@@ -3,16 +3,17 @@
 #include "simple/motion/melody.hpp"
 #include "simple/motion/algorithm.hpp"
 
-using namespace simple::motion;
-using duration = std::chrono::duration<float>;
 using namespace std::literals;
+using duration = std::chrono::duration<float>;
 using simple::support::way;
+using simple::motion::melody;
 
 // TODO: use rational, can't rely on float
+using movement = simple::motion::movement<duration,float,float>;
 
 void BasicLoop()
 {
-	auto justamo = movement<duration,float>{0,1, 1250ms};
+	auto justamo = movement{1250ms, 0,1};
 	float x = 0.0f;
 	assert( 0 == loop(x, justamo, 500ms) );
 	assert( x == way(0.f,1.f, 0.5f / 1.25f) );
@@ -25,10 +26,10 @@ void BasicLoop()
 void LoopDontSkip()
 {
 	auto sequence = melody(
-		movement<duration, float>{0,1, 10ms},
-		movement<duration, float>{0,1, 10ms},
-		movement<duration, float>{0,1, 10ms},
-		movement<duration, float>{0,1, 10ms}
+		movement{10ms, 0,1},
+		movement{10ms, 0,1},
+		movement{10ms, 0,1},
+		movement{10ms, 0,1}
 	);
 	std::array<float,4> values{};
 	assert( 1 == loop(values, sequence, 60ms) ); // TODO: do 55ms with rational
