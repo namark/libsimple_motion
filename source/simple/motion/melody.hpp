@@ -18,7 +18,10 @@ class melody
 	using result_t = multi_advance_result<duration>;
 
 	melody() = default;
-	melody(Motions... motions) : movements{motions...} {}
+	melody(Motions... motions) :
+		movements{motions...},
+		current_index{}
+	{}
 
 	bool done()
 	{
@@ -119,7 +122,7 @@ class melody
 	private:
 
 	std::tuple<Motions...> movements;
-	size_t current_index = 0;
+	size_t current_index = sizeof...(Motions);
 
 	template<typename F, size_t I = sizeof...(Motions) - 1>
 	void for_all(F&& f)

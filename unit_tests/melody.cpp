@@ -104,9 +104,18 @@ void Advance()
 
 }
 
+void EmptyIsDone()
+{
+	using movement = simple::motion::movement<std::chrono::milliseconds,float,float>;
+	using melody_t = melody<movement, movement>;
+	melody_t m;
+	assert(m.done());
+}
+
 int main()
 {
 	SharpTurn();
 	Advance();
+	EmptyIsDone();
 	return 0;
 }
