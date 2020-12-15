@@ -15,24 +15,21 @@ class melody
 	public:
 
 	using duration = std::common_type_t<typename Motions::duration...>;
+	using result_t = multi_advance_result<duration>;
 
 	melody() = default;
 	melody(Motions... motions) : movements{motions...} {}
 
 	bool done()
 	{
-		return std::get<sizeof...(Motions) - 1>(movements).done();
+		return current_index == sizeof...(Motions);
 	}
 
-	// auto advance(duration delta)
-	// {
-	// 	return advance(delta, {current_index, current_index + 1});
-	// }
-
 	// WIP: TODO: need complete restructure can't nest melodies
-	multi_advance_result<duration> advance(duration delta)
+	result_t advance(duration delta)
 	{
-		return sequence
+		assert(!done());
+		auto r = sequence
 		(
 			current_index, sizeof...(Motions),
 			delta,
@@ -47,6 +44,14 @@ class melody
 				);
 			}
 		);
+
+		bool last_done = r.done;
+		current_index = r.updated.upper() - !last_done;
+
+		if(last_done && current_index == sizeof...(Motions))
+			return {true, r.remaining, r.updated};
+
+		return {false, r.remaining, r.updated};
 	}
 
 	template <size_t... I>
@@ -67,8 +72,11 @@ class melody
 	}
 
 	template <typename T>
-	advance_result<duration> move(T& target, duration delta)
+	result_t move(T& target, duration delta)
 	{
+		if(done())
+			return {true, delta};
+
 		auto result = advance(delta);
 		support::apply_for(result.updated.upper()-1, [&target](auto&& movement)
 		{
@@ -79,8 +87,11 @@ class melody
 
 	template <typename... T,
 		std::enable_if_t<sizeof...(T) == sizeof...(Motions)>* = nullptr>
-	advance_result<duration> move(std::tuple<T...>&& targets, duration delta)
+	result_t move(std::tuple<T...>&& targets, duration delta)
 	{
+		if(done())
+			return {true, delta};
+
 		auto r = advance(delta);
 		support::apply_for(r.updated, [](auto&& movement, auto&& target)
 		{
@@ -91,9 +102,12 @@ class melody
 
 	template <typename T, size_t Size,
 		std::enable_if_t<Size == sizeof...(Motions)>* = nullptr>
-	advance_result<duration> move(std::array<T,Size>& targets, duration delta)
+	result_t move(std::array<T,Size>& targets, duration delta)
 	{
 		//TODO: mostly same as tuple version above
+		if(done())
+			return {true, delta};
+
 		auto r = advance(delta);
 		support::apply_for(r.updated, [](auto&& movement, auto&& target)
 		{

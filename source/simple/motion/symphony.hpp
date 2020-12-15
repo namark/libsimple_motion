@@ -34,38 +34,63 @@ struct variant : public std::variant<Motions...>
 
 };
 
-template <typename Motion,
-	template<typename T> typename Range =
-		std::vector>
+template <typename Range>
 class symphony
 {
 	public:
-	using duration = typename Motion::duration;
-	using iterator = typename Range<Motion>::iterator;
+	using iterator = decltype(std::begin(std::declval<Range&>()));
+	using motion = std::remove_reference_t<decltype(*std::declval<iterator>())>;
+	using duration = typename motion::duration;
+	using result_t = multi_advance_result<duration,iterator>;
 
-	explicit symphony(Range<Motion> motions) :
+	explicit symphony(Range motions) :
 		motions(std::move(motions)),
 		current(std::begin(this->motions))
 	{
 	}
 
-	multi_advance_result<duration, iterator>
-	advance(duration delta)
+	bool done()
 	{
-		return sequence
+		return current == std::end(motions);
+	}
+
+	void reset()
+	{
+		for(auto&& motion : motions)
+			motion.reset();
+		current = std::begin(motions);
+	}
+
+	result_t advance(duration delta)
+	{
+		assert(!done());
+		auto r = sequence
 		(
-			current, motions.end(),
+			current, std::end(motions),
 			delta,
-			[this](auto current, auto delta)
+			[](auto current, auto delta)
 			{
-				return (*current).advance(delta);
+				return current->advance(delta);
 			}
 		);
+
+		// TODO follows a duplicate code from melody melody
+		// maybe make another function sequence_update
+		bool last_done = r.done;
+		current = r.updated.upper() - !last_done;
+
+		if(last_done && current == std::end(motions))
+			return {true, r.remaining, r.updated};
+
+		return {false, r.remaining, r.updated};
 	}
 
 	template <typename TargetRange>
-	advance_result<duration> move(TargetRange&& target, duration delta)
+	result_t move(TargetRange&& target, duration delta)
 	{
+		if(done())
+			return {true, delta};
+
 		using std::begin;
 		using std::end;
 		using support::map_range;
@@ -82,8 +107,13 @@ class symphony
 		return r;
 	}
 
+	const Range& range()
+	{
+		return motions;
+	}
+
 	private:
-	Range<Motion> motions;
+	Range motions;
 	iterator current;
 
 };

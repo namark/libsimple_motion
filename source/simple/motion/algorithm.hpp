@@ -7,31 +7,32 @@ namespace simple::motion
 {
 
 // welcome to proper looping
-// TODO: for known total duration mod(remaining, total) optimization
 template <typename Motion, typename Target>
 int loop(Target&& target, Motion& motion, typename Motion::duration delta)
 {
 	int count = 0;
-	// better way to write this??
-	while(true) if(auto [success, remaining] =
-		motion.move(std::forward<Target>(target), delta);
-		!success
-	)
+	while(auto result =
+		motion.move(std::forward<Target>(target), delta))
 	{
 		motion.reset();
-		delta = remaining;
+		delta = result.remaining;
 		++count;
 	}
-	else break;
 	return count;
 }
 
-template <typename It, typename Duration, typename Function>
+// and proper sequencing
+// NOTE: The done flag indicates that the last updated motion is done, not necessarily the whole input sequence.
+template <typename Stepper, typename Duration, typename Function>
 constexpr
-multi_advance_result<Duration, It> sequence(It begin, It end, Duration delta, Function&& advance)
+multi_advance_result<Duration, Stepper>
+sequence(Stepper begin, Stepper end, Duration delta, Function&& advance)
 {
-	support::range<It> updated{begin, begin};
-	for(; begin != end; ++begin)
+	assert(begin != end);
+
+	support::range<Stepper> updated{begin, begin};
+
+	do
 	{
 		auto result = std::apply(
 			std::forward<Function>(advance),
@@ -39,13 +40,15 @@ multi_advance_result<Duration, It> sequence(It begin, It end, Duration delta, Fu
 		);
 		++updated.upper();
 
+		if(result.remaining <= Duration{})
+			return {result, updated};
+
 		delta = result.remaining;
-
-		if(delta <= Duration{})
-			return {true, delta, updated};
+		++begin;
 	}
+	while(begin != end);
 
-	return {false, delta, updated};
+	return {true, delta, updated};
 }
 
 } // namespace simple::motion

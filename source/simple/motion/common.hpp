@@ -8,9 +8,9 @@ namespace simple::motion
 template <typename Duration>
 struct advance_result
 {
-	bool success = false;
+	bool done;
 	Duration remaining{};
-	explicit operator bool() { return success; }
+	explicit operator bool() { return done; } // negate?
 };
 
 template <typename Duration, typename It = size_t>

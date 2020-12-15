@@ -27,7 +27,8 @@ struct movement
 
 	decltype(auto) value()
 	{
-		auto ratio = total == Duration{} ? Ratio{} :
+		assert(total != Duration{}); // nice
+		auto ratio =
 			(Ratio{} + elapsed.count()) /
 			(Ratio{} + total.count());
 		using support::way;
@@ -41,14 +42,15 @@ struct movement
 
 	advance_result<Duration> advance(Duration delta)
 	{
+		assert(!done());
 		elapsed += delta;
 		if(done())
 		{
 			auto remaining = elapsed - total;
 			elapsed = total;
-			return {false, remaining};
+			return {true, remaining};
 		}
-		return {true};
+		return {false};
 	}
 
 	void reset()
@@ -58,6 +60,9 @@ struct movement
 
 	advance_result<Duration> move(Type& target, Duration delta)
 	{
+		if(done())
+			return {true, delta};
+
 		auto result = advance(delta);
 		target = value();
 		return result;
