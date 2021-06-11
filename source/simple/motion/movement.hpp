@@ -2,6 +2,7 @@
 #define SIMPLE_MOTION_MOVEMENT_HPP
 #include "simple/support/algorithm.hpp"
 #include "common.hpp"
+#include <cassert>
 
 namespace simple::motion
 {
